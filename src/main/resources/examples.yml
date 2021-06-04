@@ -1,0 +1,15 @@
+templates:
+  simple-example:
+    ==: SanctumTemplate
+    name: "Test Name with&a colors"
+    lore: |
+      My lore with
+      multiple lines
+      and&c some colors
+    count: 1
+    enchantments:
+      silk_touch: 1
+    flags:
+    - HIDE_UNBREAKABLE
+    remove-flags:
+    - HIDE_ENCHANTS

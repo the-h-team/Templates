@@ -1,8 +1,7 @@
 package com.github.sanctum.templates;
 
-import com.google.common.collect.ImmutableMap;
 import org.bukkit.Material;
-import org.bukkit.configuration.serialization.ConfigurationSerializable;
+import org.bukkit.configuration.serialization.SerializableAs;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
@@ -10,8 +9,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Map;
 import java.util.Optional;
 
-public class SimpleMetaTemplate implements MetaTemplate, ConfigurationSerializable {
-
+@SerializableAs("SanctumMetaTemplate")
+public class SimpleMetaTemplate implements MetaTemplate {
     private final Material type;
     private final ItemMeta baseMeta;
 
@@ -45,14 +44,6 @@ public class SimpleMetaTemplate implements MetaTemplate, ConfigurationSerializab
     @Override
     public @NotNull ItemMeta getBaseMeta() {
         return baseMeta;
-    }
-
-    @Override
-    public @NotNull Map<String, Object> serialize() {
-        final ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
-        builder.put("material", type);
-        builder.put("meta", baseMeta);
-        return builder.build();
     }
 
     public static MetaTemplate deserialize(@NotNull Map<String, Object> map) throws IllegalArgumentException {

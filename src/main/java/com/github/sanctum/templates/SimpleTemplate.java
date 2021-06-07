@@ -3,7 +3,6 @@ package com.github.sanctum.templates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.bukkit.NamespacedKey;
-import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.configuration.serialization.SerializableAs;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
@@ -13,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 @SerializableAs("SanctumTemplate")
-public class SimpleTemplate implements Template, ConfigurationSerializable {
+public class SimpleTemplate implements Template {
     private final String name;
     private final List<String> lore;
     private final Integer count;
@@ -174,33 +173,6 @@ public class SimpleTemplate implements Template, ConfigurationSerializable {
     @Override
     public @NotNull Optional<List<ItemFlag>> getItemFlagsToRemove() {
         return Optional.ofNullable(removeFlags);
-    }
-
-    @Override
-    public @NotNull Map<String, Object> serialize() {
-        final ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
-        if (name != null) {
-            builder.put("name", name);
-        }
-        getLore().map(list -> String.join("\n", list))
-                .ifPresent(lore -> builder.put("lore", lore));
-        if (enchants != null && !enchants.isEmpty()) {
-            enchants.forEach((enchantment, value) -> {
-                final NamespacedKey key = enchantment.getKey();
-                builder.put(key.getNamespace().equals("minecraft") ? key.getKey() : key.toString(), value);
-            });
-        }
-        if (flags != null && !flags.isEmpty()) {
-            final ImmutableList.Builder<String> flagList = ImmutableList.builder();
-            flags.forEach(itemFlag -> flagList.add(itemFlag.name()));
-            builder.put("flags", flagList);
-        }
-        if (removeFlags != null && !removeFlags.isEmpty()) {
-            final ImmutableList.Builder<String> removeFlagList = ImmutableList.builder();
-            removeFlags.forEach(itemFlag -> removeFlagList.add(itemFlag.name()));
-            builder.put("remove-flags", removeFlagList);
-        }
-        return builder.build();
     }
 
     public static Template deserialize(@NotNull Map<String, Object> map) throws IllegalArgumentException {

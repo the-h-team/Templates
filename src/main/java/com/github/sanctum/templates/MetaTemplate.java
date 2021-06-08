@@ -46,7 +46,7 @@ public interface MetaTemplate extends ConfigurationSerializable {
     @Override
     default @NotNull Map<String, Object> serialize() {
         final ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
-        builder.put("material", getType());
+        builder.put("material", getType().name());
         builder.put("meta", getBaseMeta());
         return builder.build();
     }

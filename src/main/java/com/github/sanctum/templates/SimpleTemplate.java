@@ -128,7 +128,7 @@ public class SimpleTemplate implements Template {
                 );
     }
 
-    private SimpleTemplate(@Nullable String name,
+    protected SimpleTemplate(@Nullable String name,
                            @Nullable String lore,
                            @Nullable Integer count,
                            @Nullable Map<String, Integer> enchants,

@@ -27,6 +27,7 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
@@ -51,6 +52,49 @@ import java.util.function.Supplier;
 @SerializableAs("SanctumTemplate")
 @DelegateDeserialization(SimpleTemplate.class)
 public interface Template extends ConfigurationSerializable {
+    class Builder {
+        private String name;
+        private String lore;
+        private Integer count = null;
+        private Map<String, Integer> enchantments;
+        private List<ItemFlag> flags;
+        private List<ItemFlag> removeFlags;
+
+        public Builder setName(@Nullable String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder setLore(@Nullable String lore) {
+            this.lore = lore;
+            return this;
+        }
+
+        public Builder setCount(@Nullable Integer count) {
+            this.count = count;
+            return this;
+        }
+
+        public Builder setEnchantments(@Nullable Map<String, Integer> enchantments) {
+            this.enchantments = enchantments == null ? null : ImmutableMap.copyOf(enchantments);
+            return this;
+        }
+
+        public Builder setItemFlagsToAdd(@Nullable List<ItemFlag> flagsToAdd) {
+            this.flags = flagsToAdd == null ? null : ImmutableList.copyOf(flagsToAdd);
+            return this;
+        }
+
+        public Builder setItemFlagsToRemove(@Nullable List<ItemFlag> flagsToRemove) {
+            this.removeFlags = flagsToRemove == null ? null : ImmutableList.copyOf(flagsToRemove);
+            return this;
+        }
+
+        public Template build() {
+            return new SimpleTemplate(name, lore, count, enchantments, flags, removeFlags);
+        }
+    }
+
     @NotNull Optional<String> getName();
     @NotNull Optional<List<String>> getLore();
     @NotNull Optional<Integer> getCount();

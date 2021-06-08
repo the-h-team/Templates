@@ -52,6 +52,11 @@ import java.util.function.Supplier;
 @SerializableAs("SanctumTemplate")
 @DelegateDeserialization(SimpleTemplate.class)
 public interface Template extends ConfigurationSerializable {
+    /**
+     * Builder for immutable Templates based on {@link SimpleTemplate}.
+     *
+     * @author ms5984
+     */
     class Builder {
         private String name;
         private String lore;
@@ -60,37 +65,112 @@ public interface Template extends ConfigurationSerializable {
         private List<ItemFlag> flags;
         private List<ItemFlag> removeFlags;
 
+        /**
+         * Set the display name of the item.
+         * <p>
+         * Null = default.
+         *
+         * @param name the item display name
+         * @return this builder
+         */
         public Builder setName(@Nullable String name) {
             this.name = name;
             return this;
         }
 
+        /**
+         * Set the lore for the item.
+         * <p>
+         * Multi-line support is available with processing of both true
+         * newlines and the \n escape sequence. This allows us not only to use
+         * \n-formatted strings but also to use the following YAML syntax for
+         * a given template:
+         * <pre>
+         *     lore: |
+         *       What is love
+         *       Baby don't hurt me
+         *       Don't hurt me
+         *       No more
+         * </pre>
+         *
+         * @param lore a lore string
+         * @return this builder
+         */
         public Builder setLore(@Nullable String lore) {
             this.lore = lore;
             return this;
         }
 
+        /**
+         * Set item count or leave at its default.
+         * <p>
+         * Null = default.
+         *
+         * @param count a nullable Integer representing the quantity
+         *              the produced ItemStack should have
+         * @return this builder
+         */
         public Builder setCount(@Nullable Integer count) {
             this.count = count;
             return this;
         }
 
+        /**
+         * Set enchantments on the item.
+         * <p>
+         * The map provided MUST follow this format for all entries:
+         * <dl>
+         *     <dt>key</dt>
+         *     <dd>Either fully-qualified toString value of the desired
+         *     enchantment--such as <code>minecraft:silk_touch</code>--or
+         *     simply said key less its "<code>minecraft:</code>" namespace
+         *     (it is assumed). Custom enchantments have not been tested
+         *     but are hopefully supported this way.</dd>
+         *     <dt>value</dt>
+         *     <dd>The level of the enchantment. Do not use negatives, final
+         *     build WILL fail.</dd>
+         * </dl>
+         *
+         * @param enchantments a Map of Strings to Integers containing
+         *                    enchantment keys and levels, respectively
+         * @return this builder
+         */
         public Builder setEnchantments(@Nullable Map<String, Integer> enchantments) {
             this.enchantments = enchantments == null ? null : ImmutableMap.copyOf(enchantments);
             return this;
         }
 
+        /**
+         * Set ItemFlags to add to the item.
+         *
+         * @param flagsToAdd ItemFlags to add to the item
+         * @return this builder
+         */
         public Builder setItemFlagsToAdd(@Nullable List<ItemFlag> flagsToAdd) {
             this.flags = flagsToAdd == null ? null : ImmutableList.copyOf(flagsToAdd);
             return this;
         }
 
+        /**
+         * Set ItemFlags to remove from the item.
+         * <p>
+         * Silently fails if flags are not present.
+         *
+         * @param flagsToRemove ItemFlags to remove from the item
+         * @return this builder
+         */
         public Builder setItemFlagsToRemove(@Nullable List<ItemFlag> flagsToRemove) {
             this.removeFlags = flagsToRemove == null ? null : ImmutableList.copyOf(flagsToRemove);
             return this;
         }
 
-        public Template build() {
+        /**
+         * Produce an immutable Template from this builder.
+         *
+         * @return an immutable Template
+         * @throws IllegalArgumentException if any enchantment level negative
+         */
+        public Template build() throws IllegalArgumentException {
             return new SimpleTemplate(name, lore, count, enchantments, flags, removeFlags);
         }
     }

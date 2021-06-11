@@ -32,6 +32,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -66,6 +67,15 @@ public interface Template extends ConfigurationSerializable {
         private List<ItemFlag> removeFlags;
 
         /**
+         * Get the display name of the item.
+         *
+         * @return display name of the item
+         */
+        public @Nullable String getName() {
+            return name;
+        }
+
+        /**
          * Set the display name of the item.
          * <p>
          * Null = default.
@@ -76,6 +86,15 @@ public interface Template extends ConfigurationSerializable {
         public Builder setName(@Nullable String name) {
             this.name = name;
             return this;
+        }
+
+        /**
+         * Get the lore for the item.
+         *
+         * @return the lore for the item
+         */
+        public @Nullable String getLore() {
+            return lore;
         }
 
         /**
@@ -99,6 +118,29 @@ public interface Template extends ConfigurationSerializable {
         public Builder setLore(@Nullable String lore) {
             this.lore = lore;
             return this;
+        }
+
+        /**
+         * Transform the current lore string with the provided function.
+         *
+         * @param processing a transforming function
+         * @return this builder
+         * @throws IllegalStateException if current lore provided by
+         * {@link #getLore()} is null
+         */
+        public Builder transformLore(Function<String, String> processing) throws IllegalStateException {
+            return setLore(processing.apply(getLore()));
+        }
+
+        /**
+         * Get item count, if specified.
+         * <p>
+         * Null = default.
+         *
+         * @return specified item count or null
+         */
+        public @Nullable Integer getCount() {
+            return count;
         }
 
         /**
@@ -172,6 +214,22 @@ public interface Template extends ConfigurationSerializable {
          */
         public Template build() throws IllegalArgumentException {
             return new SimpleTemplate(name, lore, count, enchantments, flags, removeFlags);
+        }
+
+        /**
+         * Copy the values of this builder to a new instance.
+         *
+         * @return new builder instance
+         */
+        public Builder copy() {
+            final Builder copy = new Builder();
+            copy.name = name;
+            copy.lore = lore;
+            copy.count = count;
+            copy.enchantments = enchantments;
+            copy.flags = flags;
+            copy.removeFlags = removeFlags;
+            return copy;
         }
     }
 

@@ -111,6 +111,17 @@ public interface Template extends ConfigurationSerializable {
          *       Don't hurt me
          *       No more
          * </pre>
+         * <p>
+         * You can reference item input lore anywhere like so:
+         * <pre>
+         *     lore: |
+         *       This item is for sale:
+         *       %original_lore%
+         * </pre>
+         * The placeholder <code>%original_lore%</code> will always occur as
+         * its own line(s). It is thus easiest to put the placeholder on its
+         * own line. Any text that occurs on the same line as a placeholder
+         * will be moved onto an extra line (before or after).
          *
          * @param lore a lore string
          * @return this builder
@@ -125,10 +136,8 @@ public interface Template extends ConfigurationSerializable {
          *
          * @param processing a transforming function
          * @return this builder
-         * @throws IllegalStateException if current lore provided by
-         * {@link #getLore()} is null
          */
-        public Builder transformLore(Function<String, String> processing) throws IllegalStateException {
+        public Builder transformLore(Function<@Nullable String, @Nullable String> processing) {
             return setLore(processing.apply(getLore()));
         }
 
@@ -260,8 +269,27 @@ public interface Template extends ConfigurationSerializable {
         final ItemMeta meta = toStyle.getItemMeta();
         if (meta == null) throw new IllegalStateException();
         getName().ifPresent(meta::setDisplayName);
-        // TODO: add placeholder logic to allow preserving + referencing original lore
-        getLore().ifPresent(meta::setLore);
+        getLore().ifPresent(newLore -> {
+            // placeholder logic to allow preserving + referencing original lore
+            if (newLore.stream().noneMatch(str -> newLore.contains("%original_lore%"))) {
+                meta.setLore(newLore);
+                return;
+            }
+            final ImmutableList.Builder<String> finalLore = ImmutableList.builder();
+            for (String line : newLore) {
+                if (!line.contains("%original_lore%")) {
+                    finalLore.add(line);
+                    continue;
+                }
+                final List<String> originalLore = meta.getLore();
+                final String[] split = line.split("%original_lore%", 0);
+                for (int i = 0; i < split.length; i++) {
+                    if (i > 0 && originalLore != null) finalLore.addAll(originalLore);
+                    finalLore.add(split[i]);
+                }
+            }
+            meta.setLore(finalLore.build());
+        });
         getEnchantments().ifPresent(map -> {
             map.forEach((enchantment, level) -> {
                 meta.addEnchant(enchantment, level, true);

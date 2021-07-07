@@ -41,3 +41,47 @@ Take moment to look over this example:
       </plugins>
     </build>
 ```
+
+### Importing
+#### Snapshots (requires sonatype repository)
+```xml
+<project>
+    <!-- For Sonatype Nexus snapshots (primary development here) -->
+    <repositories>
+        <repository>
+            <id>sonatype-snapshots</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+    <dependencies>
+        <dependency>
+            <groupId>com.github.the-h-team</groupId>
+            <artifactId>templates</artifactId>
+            <version><!--nexus snapshot version here--></version>
+        </dependency>
+    </dependencies>
+</project>
+```
+#### GitHub+Jitpack (requires jitpack repository)
+```xml
+<project>
+    <!-- For Jitpack pre-release, custom commit builds -->
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io/</url>
+        </repository>
+    </repositories>
+    <dependencies>
+        <dependency>
+            <groupId>com.github.the-h-team</groupId>
+            <artifactId>Templates</artifactId>
+            <!--commit hash; example below-->
+            <version>b95d3f3</version>
+        </dependency>
+    </dependencies>
+</project>
+```

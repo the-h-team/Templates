@@ -282,6 +282,10 @@ public interface Template extends ConfigurationSerializable {
                     continue;
                 }
                 final List<String> originalLore = meta.getLore();
+                if (line.equals("%original_lore%") && originalLore != null) {
+                    originalLore.forEach(finalLore::add);
+                    continue;
+                }
                 final String[] split = line.split("%original_lore%", 0);
                 for (int i = 0; i < split.length; i++) {
                     if (i > 0 && originalLore != null) finalLore.addAll(originalLore);

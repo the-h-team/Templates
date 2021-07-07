@@ -1,6 +1,6 @@
 ## Templates
 #### A uniform solution for storing and applying item styles
-[![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/com.github.the-h-team/templates?server=https%3A%2F%2Foss.sonatype.org)](https://oss.sonatype.org/#nexus-search;gav~com.github.the-h-team~templates~~~)
+[![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/com.github.the-h-team/templates?server=https%3A%2F%2Fs01.oss.sonatype.org)](https://s01.oss.sonatype.org/#nexus-search;gav~com.github.the-h-team~templates~~~)
 
 ### Relocation (READ THIS SECTION)
 It is important to include a valid `maven-shade-plugin` configuration to avoid

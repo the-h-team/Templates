@@ -48,6 +48,7 @@ import java.util.function.Supplier;
  *     <li>ItemFlags to remove</li>
  * </ul>
  *
+ * @since 1.0.0
  * @author ms5984
  */
 @SerializableAs("SanctumTemplate")
@@ -56,6 +57,7 @@ public interface Template extends ConfigurationSerializable {
     /**
      * Builder for immutable Templates based on {@link SimpleTemplate}.
      *
+     * @since 1.0.0
      * @author ms5984
      */
     class Builder {
@@ -79,6 +81,11 @@ public interface Template extends ConfigurationSerializable {
          * Set the display name of the item.
          * <p>
          * Null = default.
+         * <p>
+         * You can reference the item input display name like so:
+         * <pre>
+         *     name: "Player info for %original_name%"
+         * </pre>
          *
          * @param name the item display name
          * @return this builder
@@ -241,52 +248,132 @@ public interface Template extends ConfigurationSerializable {
             return copy;
         }
     }
+    /**
+     * The placeholder for referencing an item's original display name.
+     */
+    String NAME_PLACEHOLDER = "%original_name%";
+    /**
+     * The placeholder for referencing an item's original lore.
+     */
+    String LORE_PLACEHOLDER = "%original_lore%";
+    /**
+     * An immutable, empty template.
+     * <p>
+     * No properties will be set.
+     */
+    Template EMPTY = new SimpleTemplate(null, null, null, null, null, null);
 
+    /**
+     * Indicates the display name transformation, if needed.
+     *
+     * @return an Optional describing the display name transform
+     */
     @NotNull Optional<String> getName();
+
+    /**
+     * Indicates the lore transformation, if needed.
+     *
+     * @return an Optional describing the lore transform
+     */
     @NotNull Optional<List<String>> getLore();
+
+    /**
+     * Indicates the item amount transformation, if needed.
+     *
+     * @return an Optional describing the amount transform
+     */
     @NotNull Optional<Integer> getCount();
+
+    /**
+     * Indicates the enchantment transformations, if needed.
+     *
+     * @return an Optional describing the enchantment transforms
+     */
     @NotNull Optional<Map<Enchantment, Integer>> getEnchantments();
+
+    /**
+     * Indicates the ItemFlag additive transformation, if needed.
+     *
+     * @return an Optional describing the ItemFlag additive transform
+     */
     @NotNull Optional<List<ItemFlag>> getItemFlagsToAdd();
+
+    /**
+     * Indicates the ItemFlag subtractive transformation, if needed.
+     *
+     * @return an Optional describing the ItemFlag subtractive transform
+     */
     @NotNull Optional<List<ItemFlag>> getItemFlagsToRemove();
 
-    @NotNull
-    default ItemStack produce(@NotNull Material material) {
+    /**
+     * Produce an ItemStack with this Template using a new ItemStack
+     * of the material provided.
+     *
+     * @param material material for new ItemStack
+     * @return a new, styled ItemStack
+     */
+    default @NotNull ItemStack produce(@NotNull Material material) {
         // new stack from material
         return produce(() -> new ItemStack(material));
     }
 
-    @NotNull
-    default ItemStack produce(@NotNull ItemStack original) {
+    /**
+     * Produce an ItemStack with this Template using an existing ItemStack.
+     * <p>
+     * The provided ItemStack will be cloned as per the clone constructor
+     * of {@link ItemStack}.
+     *
+     * @param original an ItemStack to clone
+     * @return a new, styled ItemStack
+     */
+    default @NotNull ItemStack produce(@NotNull ItemStack original) {
         // clone
         return produce(() -> new ItemStack(original));
     }
 
-    @SuppressWarnings("CodeBlock2Expr")
-    @NotNull
-    default ItemStack produce(@NotNull Supplier<@NotNull ItemStack> supplier) {
+    /**
+     * Produce an ItemStack with this Template using a Supplier
+     * to source the base item.
+     *
+     * @param supplier an ItemStack supplier
+     * @return a styled ItemStack
+     */
+    default @NotNull ItemStack produce(@NotNull Supplier<@NotNull ItemStack> supplier) {
         final ItemStack toStyle = supplier.get();
         getCount().ifPresent(toStyle::setAmount);
         final ItemMeta meta = toStyle.getItemMeta();
         if (meta == null) throw new IllegalStateException();
-        getName().ifPresent(meta::setDisplayName);
+        getName().ifPresent(newName -> {
+            // check for placeholder
+            if (!newName.contains(NAME_PLACEHOLDER)) {
+                meta.setDisplayName(newName);
+                return;
+            }
+            meta.setDisplayName(newName.replace(
+                    NAME_PLACEHOLDER,
+                    Optional.of(meta)
+                            .filter(ItemMeta::hasDisplayName)
+                            .map(ItemMeta::getDisplayName).orElse(""))
+            );
+        });
         getLore().ifPresent(newLore -> {
             // placeholder logic to allow preserving + referencing original lore
-            if (newLore.stream().noneMatch(str -> newLore.contains("%original_lore%"))) {
+            if (newLore.stream().noneMatch(str -> newLore.contains(LORE_PLACEHOLDER))) {
                 meta.setLore(newLore);
                 return;
             }
             final ImmutableList.Builder<String> finalLore = ImmutableList.builder();
             for (String line : newLore) {
-                if (!line.contains("%original_lore%")) {
+                if (!line.contains(LORE_PLACEHOLDER)) {
                     finalLore.add(line);
                     continue;
                 }
                 final List<String> originalLore = meta.getLore();
-                if (line.equals("%original_lore%") && originalLore != null) {
+                if (line.equals(LORE_PLACEHOLDER) && originalLore != null) {
                     originalLore.forEach(finalLore::add);
                     continue;
                 }
-                final String[] split = line.split("%original_lore%", 0);
+                final String[] split = line.split(LORE_PLACEHOLDER, 0);
                 for (int i = 0; i < split.length; i++) {
                     if (i > 0 && originalLore != null) finalLore.addAll(originalLore);
                     finalLore.add(split[i]);
@@ -294,30 +381,29 @@ public interface Template extends ConfigurationSerializable {
             }
             meta.setLore(finalLore.build());
         });
-        getEnchantments().ifPresent(map -> {
-            map.forEach((enchantment, level) -> {
-                meta.addEnchant(enchantment, level, true);
-            });
-        });
+        getEnchantments().ifPresent(map ->
+            map.forEach((enchantment, level) ->
+                meta.addEnchant(enchantment, level, true)
+            )
+        );
         getItemFlagsToAdd().ifPresent(list -> list.forEach(meta::addItemFlags));
         getItemFlagsToRemove().ifPresent(list -> list.forEach(meta::removeItemFlags));
         toStyle.setItemMeta(meta);
         return toStyle;
     }
 
-    @SuppressWarnings("CodeBlock2Expr")
     @Override
     default @NotNull Map<String, Object> serialize() {
         final ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
         getName().ifPresent(name -> builder.put("name", name));
         getLore().map(list -> String.join("\n", list))
                 .ifPresent(lore -> builder.put("lore", lore));
-        getEnchantments().filter(map -> !map.isEmpty()).ifPresent(enchants -> {
+        getEnchantments().filter(map -> !map.isEmpty()).ifPresent(enchants ->
             enchants.forEach((enchantment, value) -> {
                 final NamespacedKey key = enchantment.getKey();
                 builder.put(key.getNamespace().equals("minecraft") ? key.getKey() : key.toString(), value);
-            });
-        });
+            })
+        );
         getItemFlagsToAdd().filter(list -> !list.isEmpty()).ifPresent(flags -> {
             final ImmutableList.Builder<String> flagList = ImmutableList.builder();
             flags.forEach(itemFlag -> flagList.add(itemFlag.name()));

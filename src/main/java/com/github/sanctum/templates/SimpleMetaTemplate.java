@@ -15,6 +15,7 @@
  */
 package com.github.sanctum.templates;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.serialization.SerializableAs;
 import org.bukkit.inventory.ItemStack;
@@ -30,6 +31,7 @@ import java.util.Optional;
  * Provides MetaTemplate's default Bukkit deserialization.
  * @see org.bukkit.configuration.serialization.DelegateDeserialization
  *
+ * @since 1.0.0
  * @author ms5984
  */
 @SerializableAs("SanctumMetaTemplate")
@@ -37,6 +39,14 @@ public class SimpleMetaTemplate implements MetaTemplate {
     private final Material type;
     private final ItemMeta baseMeta;
 
+    /**
+     * Create a simple MetaTemplate from an existing ItemStack.
+     * <p>
+     * Captures the item's Material and clones its ItemMeta.
+     * The original item is not modified.
+     *
+     * @param original an existing ItemStack
+     */
     public SimpleMetaTemplate(@NotNull ItemStack original) {
         this(original.getType(), Optional.ofNullable(original.getItemMeta()).map(ItemMeta::clone).orElseThrow(IllegalStateException::new));
     }
@@ -45,7 +55,7 @@ public class SimpleMetaTemplate implements MetaTemplate {
         this.type = type;
         this.baseMeta = baseMeta;
     }
-    private SimpleMetaTemplate(@NotNull Map<String, Object> serialized) {
+    private SimpleMetaTemplate(@NotNull Map<String, Object> serialized) throws IllegalArgumentException {
         this(
                 Optional.ofNullable(serialized.get("material"))
                         .filter(String.class::isInstance)
@@ -57,6 +67,10 @@ public class SimpleMetaTemplate implements MetaTemplate {
                         .map(ItemMeta.class::cast)
                         .orElseThrow(IllegalStateException::new)
         );
+        // validate assignability
+        if (!Bukkit.getItemFactory().isApplicable(baseMeta, type)) {
+            throw new IllegalArgumentException("This meta cannot be applied to the item type specified.");
+        }
     }
 
     @Override

@@ -29,6 +29,7 @@ import java.util.Map;
 /**
  * Describes a Material-ItemMeta pair to which you may apply Templates.
  *
+ * @since 1.0.0
  * @author ms5984
  */
 @SerializableAs("SanctumMetaTemplate")

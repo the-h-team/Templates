@@ -30,6 +30,7 @@ import java.util.Optional;
  * Provides MetaTemplate's default Bukkit deserialization.
  * @see org.bukkit.configuration.serialization.DelegateDeserialization
  *
+ * @since 1.0.0
  * @author ms5984
  */
 @SerializableAs("SanctumMetaTemplate")

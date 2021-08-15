@@ -10,6 +10,8 @@
 
     <name>Templates</name>
     <description>A uniform solution for storing item styles</description>
+    <url>https://github.com/the-h-team/Templates</url>
+    <inceptionYear>2021</inceptionYear>
 
     <properties>
         <java.version>1.8</java.version>

@@ -43,6 +43,8 @@ Take moment to look over this example:
 ```
 
 ### Importing
+#### Full release
+None so far, but as we use OSSRH, it'd available directly in Maven Central
 #### Snapshots (requires sonatype repository)
 ```xml
 <project>

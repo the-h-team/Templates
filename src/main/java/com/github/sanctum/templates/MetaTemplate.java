@@ -35,9 +35,28 @@ import java.util.Map;
 @SerializableAs("SanctumMetaTemplate")
 @DelegateDeserialization(SimpleMetaTemplate.class)
 public interface MetaTemplate extends ConfigurationSerializable {
+    /**
+     * Returns the type of the created ItemStack.
+     *
+     * @return the type of the created ItemStack
+     */
     @NotNull Material getType();
+
+    /**
+     * Returns the item meta which will be applied to the created ItemStack.
+     *
+     * @return the item meta which will be applied to the created ItemStack
+     */
     @NotNull ItemMeta getBaseMeta();
 
+    /**
+     * Use this MetaTemplate to produce a new ItemStack with identical meta
+     * and process it with the provided Template.
+     *
+     * @param template a Template
+     * @return a meta-restored, styled ItemStack
+     * @see Template#EMPTY
+     */
     default @NotNull ItemStack compose(@NotNull Template template) {
         final ItemStack item = new ItemStack(getType());
         if (!item.setItemMeta(getBaseMeta())) throw new IllegalStateException("Unable to map BaseMeta!");

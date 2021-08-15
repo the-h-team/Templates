@@ -256,28 +256,89 @@ public interface Template extends ConfigurationSerializable {
      * The placeholder for referencing an item's original lore.
      */
     String LORE_PLACEHOLDER = "%original_lore%";
+    /**
+     * An immutable, empty template.
+     * <p>
+     * No properties will be set.
+     */
+    Template EMPTY = new SimpleTemplate(null, null, null, null, null, null);
 
+    /**
+     * Indicates the display name transformation, if needed.
+     *
+     * @return an Optional describing the display name transform
+     */
     @NotNull Optional<String> getName();
+
+    /**
+     * Indicates the lore transformation, if needed.
+     *
+     * @return an Optional describing the lore transform
+     */
     @NotNull Optional<List<String>> getLore();
+
+    /**
+     * Indicates the item amount transformation, if needed.
+     *
+     * @return an Optional describing the amount transform
+     */
     @NotNull Optional<Integer> getCount();
+
+    /**
+     * Indicates the enchantment transformations, if needed.
+     *
+     * @return an Optional describing the enchantment transforms
+     */
     @NotNull Optional<Map<Enchantment, Integer>> getEnchantments();
+
+    /**
+     * Indicates the ItemFlag additive transformation, if needed.
+     *
+     * @return an Optional describing the ItemFlag additive transform
+     */
     @NotNull Optional<List<ItemFlag>> getItemFlagsToAdd();
+
+    /**
+     * Indicates the ItemFlag subtractive transformation, if needed.
+     *
+     * @return an Optional describing the ItemFlag subtractive transform
+     */
     @NotNull Optional<List<ItemFlag>> getItemFlagsToRemove();
 
-    @NotNull
-    default ItemStack produce(@NotNull Material material) {
+    /**
+     * Produce an ItemStack with this Template using a new ItemStack
+     * of the material provided.
+     *
+     * @param material material for new ItemStack
+     * @return a new, styled ItemStack
+     */
+    default @NotNull ItemStack produce(@NotNull Material material) {
         // new stack from material
         return produce(() -> new ItemStack(material));
     }
 
-    @NotNull
-    default ItemStack produce(@NotNull ItemStack original) {
+    /**
+     * Produce an ItemStack with this Template using an existing ItemStack.
+     * <p>
+     * The provided ItemStack will be cloned as per the clone constructor
+     * of {@link ItemStack}.
+     *
+     * @param original an ItemStack to clone
+     * @return a new, styled ItemStack
+     */
+    default @NotNull ItemStack produce(@NotNull ItemStack original) {
         // clone
         return produce(() -> new ItemStack(original));
     }
 
-    @NotNull
-    default ItemStack produce(@NotNull Supplier<@NotNull ItemStack> supplier) {
+    /**
+     * Produce an ItemStack with this Template using a Supplier
+     * to source the base item.
+     *
+     * @param supplier an ItemStack supplier
+     * @return a styled ItemStack
+     */
+    default @NotNull ItemStack produce(@NotNull Supplier<@NotNull ItemStack> supplier) {
         final ItemStack toStyle = supplier.get();
         getCount().ifPresent(toStyle::setAmount);
         final ItemMeta meta = toStyle.getItemMeta();

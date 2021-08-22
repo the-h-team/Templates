@@ -1,5 +1,6 @@
 ## Templates
 #### A uniform solution for storing and applying item styles
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.the-h-team/templates)](https://search.maven.org/search?q=g:com.github.the-h-team%20a:templates)
 [![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/com.github.the-h-team/templates?server=https%3A%2F%2Fs01.oss.sonatype.org)](https://s01.oss.sonatype.org/#nexus-search;gav~com.github.the-h-team~templates~~~)
 
 ### Relocation (READ THIS SECTION)

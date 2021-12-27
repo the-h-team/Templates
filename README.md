@@ -1,11 +1,11 @@
-## Templates
-#### A uniform solution for storing and applying item styles
+# Templates
+###### A uniform solution for storing and applying item styles
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.the-h-team/templates)](https://search.maven.org/search?q=g:com.github.the-h-team%20a:templates)
 [![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/com.github.the-h-team/templates?server=https%3A%2F%2Fs01.oss.sonatype.org)](https://s01.oss.sonatype.org/#nexus-search;gav~com.github.the-h-team~templates~~~)
 
-### Relocation (READ THIS SECTION)
+### Relocation (Please READ THIS SECTION)
 It is important to include a valid `maven-shade-plugin` configuration to avoid
-colliding with other plugin jars that also use and provide this resource.
+class collision with other plugin jars that also use and provide this resource.
 Take moment to look over this example:
 ```xml
     <!-- In your pom.xml -->
@@ -31,8 +31,6 @@ Take moment to look over this example:
               <goals>
                 <goal>shade</goal>
               </goals>
-              <!-- Note that there are two areas labeled configuration! -->
-              <!-- Relocations must go up in the first one -->
               <configuration>
                 <createDependencyReducedPom>false</createDependencyReducedPom>
               </configuration>
@@ -45,7 +43,17 @@ Take moment to look over this example:
 
 ### Importing
 #### Full release
-None so far, but as we use OSSRH, it'd available directly in Maven Central
+```xml
+<project>
+    <dependencies>
+        <dependency>
+            <groupId>com.github.the-h-team</groupId>
+            <artifactId>templates</artifactId>
+            <version><!--maven central version here--></version>
+        </dependency>
+    </dependencies>
+</project>
+```
 #### Snapshots (requires sonatype repository)
 ```xml
 <project>

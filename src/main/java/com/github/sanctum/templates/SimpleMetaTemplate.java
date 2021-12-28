@@ -21,6 +21,7 @@ import org.bukkit.configuration.serialization.SerializableAs;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Optional;
@@ -50,11 +51,20 @@ public class SimpleMetaTemplate implements MetaTemplate {
     public SimpleMetaTemplate(@NotNull ItemStack original) {
         this(original.getType(), Optional.ofNullable(original.getItemMeta()).map(ItemMeta::clone).orElseThrow(IllegalStateException::new));
     }
-    // doesn't validate assignability of meta
+
+    /**
+     * Create a simple meta template from a Material and an ItemMeta.
+     * <p>
+     * <b>Does not validate assignability of meta.</b>
+     *
+     * @param type a material
+     * @param baseMeta an item meta
+     */
     protected SimpleMetaTemplate(@NotNull Material type, @NotNull ItemMeta baseMeta) {
         this.type = type;
         this.baseMeta = baseMeta;
     }
+
     private SimpleMetaTemplate(@NotNull Map<String, Object> serialized) throws IllegalArgumentException {
         this(
                 Optional.ofNullable(serialized.get("material"))
@@ -83,11 +93,37 @@ public class SimpleMetaTemplate implements MetaTemplate {
         return baseMeta;
     }
 
-    public static MetaTemplate deserialize(@NotNull Map<String, Object> map) throws IllegalArgumentException {
-        return new SimpleMetaTemplate(map);
+    // below for ConfigurationSerializable contract
+    /**
+     * Deserialize a saved meta template as a new SimpleMetaTemplate.
+     *
+     * @param map the saved meta template
+     * @return a new SimpleMetaTemplate
+     * @implNote Bukkit is unhappy if ConfigurationSerializable classes
+     * throw exceptions (such as {@link IllegalArgumentException}); as
+     * of Templates v1.1.0 this method will instead return null and log
+     * the event to the server console.
+     */
+    public static @Nullable MetaTemplate deserialize(@NotNull Map<String, Object> map) {
+        try {
+            return new SimpleMetaTemplate(map);
+        } catch (IllegalArgumentException e) {
+            Bukkit.getServer().getLogger().warning("[Templates] MetaTemplate deserialization error: returning null");
+            Bukkit.getServer().getLogger().warning(e.getMessage());
+            return null;
+        }
     }
 
-    public static MetaTemplate valueOf(@NotNull Map<String, Object> map) throws IllegalArgumentException {
-        return new SimpleMetaTemplate(map);
+    /**
+     * Deserialize a saved meta template as a new SimpleMetaTemplate.
+     *
+     * @deprecated In favor of {@link #deserialize}. We will remove in v2.
+     * @param map the saved meta template
+     * @return a new SimpleMetaTemplate
+     * @implNote As of v1.1.0, delegates to {@link #deserialize}. See notes.
+     */
+    @Deprecated // TODO: remove in 2.0.0
+    public static @Nullable MetaTemplate valueOf(@NotNull Map<String, Object> map) {
+        return deserialize(map);
     }
 }

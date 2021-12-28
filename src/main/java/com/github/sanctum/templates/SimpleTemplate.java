@@ -17,6 +17,7 @@ package com.github.sanctum.templates;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.serialization.SerializableAs;
 import org.bukkit.enchantments.Enchantment;
@@ -37,12 +38,16 @@ import java.util.*;
  */
 @SerializableAs("SanctumTemplate")
 public class SimpleTemplate implements Template {
+    private final String rawName;
     private final String name;
+    private final String rawLore;
     private final List<String> lore;
     private final Integer count;
     private final Map<Enchantment, Integer> enchants;
     private final List<ItemFlag> flags;
     private final List<ItemFlag> removeFlags;
+    private final boolean skippedColorName;
+    private final boolean skippedColorLore;
 
     private SimpleTemplate(@NotNull Map<String, Object> serialized) {
         this(
@@ -129,17 +134,43 @@ public class SimpleTemplate implements Template {
                 );
     }
 
+    SimpleTemplate(@Nullable String name, @Nullable String lore, @Nullable Integer count,
+                   @Nullable Map<String, Integer> enchants,
+                   @Nullable List<ItemFlag> flags,
+                   @Nullable List<ItemFlag> removeFlags) {
+        this(name, lore, count, enchants, flags, removeFlags,
+                name == null || !name.contains("&"),
+                lore == null || !lore.contains("&"));
+    }
+
+    /**
+     * Create a simple template from components.
+     *
+     * @param name display name to apply
+     * @param lore lore to apply
+     * @param count amount to apply
+     * @param enchants enchantments to apply
+     * @param flags ItemFlags to add
+     * @param removeFlags ItemFlags to remove
+     * @param skipColorName whether to skip color processing of {@code name}
+     * @param skipColorLore whether to skip color processing of {@code lore}
+     * @throws IllegalArgumentException if {@code enchants} has negative values
+     * @since 1.1.0
+     */
     protected SimpleTemplate(@Nullable String name,
-                           @Nullable String lore,
-                           @Nullable Integer count,
-                           @Nullable Map<String, Integer> enchants,
-                           @Nullable List<ItemFlag> flags,
-                           @Nullable List<ItemFlag> removeFlags) {
-        this.name = name;
-        this.lore = Optional.ofNullable(lore)
-                .map(encoded -> lore.split("\\n"))
-                .map(Arrays::asList)
-                .orElse(null);
+                             @Nullable String lore,
+                             @Nullable Integer count,
+                             @Nullable Map<String, Integer> enchants,
+                             @Nullable List<ItemFlag> flags,
+                             @Nullable List<ItemFlag> removeFlags,
+                             boolean skipColorName,
+                             boolean skipColorLore) throws IllegalArgumentException {
+        rawName = name;
+        rawLore = lore;
+        this.name = skipColorName ? name : TextProcessing.translateColor(name);
+        skippedColorName = skipColorName;
+        this.lore = processLore(rawLore, skipColorLore);
+        skippedColorLore = skipColorLore;
         this.count = count;
         this.enchants = Optional.ofNullable(enchants)
                 .map(map -> {
@@ -175,8 +206,28 @@ public class SimpleTemplate implements Template {
     }
 
     @Override
+    public @Nullable String rawNameTransform() {
+        return rawName;
+    }
+
+    @Override
+    public boolean colorName() {
+        return !skippedColorName;
+    }
+
+    @Override
     public @NotNull Optional<List<String>> getLore() {
         return Optional.ofNullable(lore);
+    }
+
+    @Override
+    public @Nullable String rawLoreTransform() {
+        return rawLore;
+    }
+
+    @Override
+    public boolean colorLore() {
+        return !skippedColorLore;
     }
 
     @Override
@@ -199,11 +250,43 @@ public class SimpleTemplate implements Template {
         return Optional.ofNullable(removeFlags);
     }
 
-    public static Template deserialize(@NotNull Map<String, Object> map) throws IllegalArgumentException {
-        return new SimpleTemplate(map);
+    static @Nullable List<String> processLore(String rawLore, boolean skipColor) {
+        if (rawLore == null) return null;
+        if (!skipColor) rawLore = TextProcessing.translateColor(rawLore);
+        return ImmutableList.copyOf(TextProcessing.splitAtNewline(rawLore));
     }
 
-    public static Template valueOf(@NotNull Map<String, Object> map) throws IllegalArgumentException {
-        return new SimpleTemplate(map);
+    // below for ConfigurationSerializable contract
+    /**
+     * Deserialize a saved template as a new SimpleTemplate.
+     *
+     * @param map the saved template
+     * @return a new SimpleTemplate
+     * @implNote Bukkit is unhappy if ConfigurationSerializable classes
+     * throw exceptions (such as {@link IllegalArgumentException}); as
+     * of Templates v1.1.0 this method will instead return null and log
+     * the event to the server console.
+     */
+    public static @Nullable Template deserialize(@NotNull Map<String, Object> map) {
+        try {
+            return new SimpleTemplate(map);
+        } catch (IllegalArgumentException e) {
+            Bukkit.getServer().getLogger().warning("[Templates] Template deserialization error: returning null");
+            Bukkit.getServer().getLogger().warning(e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Deserialize a saved template as a new SimpleTemplate.
+     *
+     * @deprecated In favor of {@link #deserialize}. We will remove in v2.
+     * @param map the saved template
+     * @return a new SimpleTemplate
+     * @implNote As of v1.1.0, delegates to {@link #deserialize}. See notes.
+     */
+    @Deprecated // TODO: remove in 2.0.0
+    public static @Nullable Template valueOf(@NotNull Map<String, Object> map) {
+        return deserialize(map);
     }
 }

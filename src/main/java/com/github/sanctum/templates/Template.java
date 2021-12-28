@@ -67,6 +67,8 @@ public interface Template extends ConfigurationSerializable {
         private Map<String, Integer> enchantments;
         private List<ItemFlag> flags;
         private List<ItemFlag> removeFlags;
+        private boolean skipColorName;
+        private boolean skipColorLore;
 
         /**
          * Get the display name of the item.
@@ -92,6 +94,30 @@ public interface Template extends ConfigurationSerializable {
          */
         public Builder setName(@Nullable String name) {
             this.name = name;
+            return this;
+        }
+
+        /**
+         * Transform the current name string with the provided function.
+         *
+         * @param processing a transforming function
+         * @return this builder
+         * @since 1.1.0
+         */
+        public Builder transformName(Function<@Nullable String, @Nullable String> processing) {
+            return setName(processing.apply(getName()));
+        }
+
+        /**
+         * Manually set whether to skip ampersand ({@literal &})
+         * color code processing for the display name.
+         *
+         * @param skip whether to skip color processing for the display name
+         * @return this builder
+         * @since 1.1.0
+         */
+        public Builder skipColorName(boolean skip) {
+            skipColorName = skip;
             return this;
         }
 
@@ -146,6 +172,19 @@ public interface Template extends ConfigurationSerializable {
          */
         public Builder transformLore(Function<@Nullable String, @Nullable String> processing) {
             return setLore(processing.apply(getLore()));
+        }
+
+        /**
+         * Manually set whether to skip ampersand ({@literal &})
+         * color code processing for the lore.
+         *
+         * @param skip whether to skip color processing for the lore
+         * @return this builder
+         * @since 1.1.0
+         */
+        public Builder skipColorLore(boolean skip) {
+            skipColorLore = skip;
+            return this;
         }
 
         /**
@@ -229,7 +268,7 @@ public interface Template extends ConfigurationSerializable {
          * @throws IllegalArgumentException if any enchantment level negative
          */
         public Template build() throws IllegalArgumentException {
-            return new SimpleTemplate(name, lore, count, enchantments, flags, removeFlags);
+            return new SimpleTemplate(name, lore, count, enchantments, flags, removeFlags, skipColorName, skipColorLore);
         }
 
         /**
@@ -245,6 +284,8 @@ public interface Template extends ConfigurationSerializable {
             copy.enchantments = enchantments;
             copy.flags = flags;
             copy.removeFlags = removeFlags;
+            copy.skipColorName = skipColorName;
+            copy.skipColorLore = skipColorLore;
             return copy;
         }
     }
@@ -271,11 +312,51 @@ public interface Template extends ConfigurationSerializable {
     @NotNull Optional<String> getName();
 
     /**
+     * Get the original name transform provided to
+     * this template before color processing.
+     *
+     * @return the defined name transform
+     * @since 1.1.0
+     */
+    @Nullable String rawNameTransform();
+
+    /**
+     * Indicates that {@link #getName()} has been (or will be)
+     * processed for ampersand color codes.
+     *
+     * @return true if {@link #getName()} is pre-processed
+     * @since 1.1.0
+     */
+    default boolean colorName() {
+        return true;
+    }
+
+    /**
      * Indicates the lore transformation, if needed.
      *
      * @return an Optional describing the lore transform
      */
     @NotNull Optional<List<String>> getLore();
+
+    /**
+     * Get the original lore transform provided to
+     * this template before color processing.
+     *
+     * @return the defined name transform
+     * @since 1.1.0
+     */
+    @Nullable String rawLoreTransform();
+
+    /**
+     * Indicates that {@link #getLore()} has been (or will be)
+     * processed for ampersand color codes.
+     *
+     * @return true if {@link #getLore()} is pre-processed
+     * @since 1.1.0
+     */
+    default boolean colorLore() {
+        return true;
+    }
 
     /**
      * Indicates the item amount transformation, if needed.
@@ -415,5 +496,15 @@ public interface Template extends ConfigurationSerializable {
             builder.put("remove-flags", removeFlagList);
         });
         return builder.build();
+    }
+
+    /**
+     * Get a new Template builder.
+     *
+     * @return a new Builder
+     * @since 1.1.0
+     */
+    static Builder builder() {
+        return new Builder();
     }
 }

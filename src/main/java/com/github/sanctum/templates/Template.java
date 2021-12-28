@@ -358,7 +358,7 @@ public interface Template extends ConfigurationSerializable {
         });
         getLore().ifPresent(newLore -> {
             // placeholder logic to allow preserving + referencing original lore
-            if (newLore.stream().noneMatch(str -> newLore.contains(LORE_PLACEHOLDER))) {
+            if (newLore.stream().noneMatch(str -> str.contains(LORE_PLACEHOLDER))) {
                 meta.setLore(newLore);
                 return;
             }
